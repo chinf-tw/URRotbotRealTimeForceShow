@@ -2,14 +2,14 @@ package main
 
 import (
 	"NTNU_Prj/DeCodeURInterface"
-	"NTNU_Prj/UR3Handler"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 var urAddress string
@@ -85,75 +85,69 @@ func main() {
 	//const network = "tcp"
 	//const address = ":21"
 
+	if len(os.Args) != 3 {
+		log.Fatal("Please give two args.")
+	}
+
+	fmt.Println(os.Args)
+
 	urAddress = os.Args[1]
-
-	go func() {
-		// err := DualArmControl.NewServerRun(network, address, testConnectHandler)
-		// if err != nil {
-		// 	log.Panic(err)
-		// }
-		//forcePackagesHandler()
-
-	}()
-	//for{
-	//	pose := <- poseForce
-	//	fmt.Println(pose[0])
-	//}
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	listenPort := os.Args[2]
+	log.Fatal(http.ListenAndServe(listenPort, nil))
 }
 
-func forcePackagesHandler() {
-	conn, err := net.Dial("tcp", "192.168.1.107:30003")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer conn.Close()
-	var tcpForceData []byte
-	var poseForceData []float32
+// func forcePackagesHandler() {
+// 	conn, err := net.Dial("tcp", "192.168.1.107:30003")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	defer conn.Close()
+// 	var tcpForceData []byte
+// 	var poseForceData []float32
 
-	for {
-		tcpForceData, err = DeCodeURInterface.RealTime(conn)
-		if err != nil {
-			fmt.Println(err)
-		}
-		go func() {
-			if tcpForceData != nil {
-				for i := 0; i <= 6; i++ {
-					poseForceData = append(poseForceData, float32(DeCodeURInterface.Float64frombytes(tcpForceData[i*8:(i+1)*8])))
-				}
-				poseForce <- poseForceData
-				time.Sleep(time.Millisecond * 400)
-			}
-		}()
+// 	for {
+// 		tcpForceData, err = DeCodeURInterface.RealTime(conn)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 		}
+// 		go func() {
+// 			if tcpForceData != nil {
+// 				for i := 0; i <= 6; i++ {
+// 					poseForceData = append(poseForceData, float32(DeCodeURInterface.Float64frombytes(tcpForceData[i*8:(i+1)*8])))
+// 				}
+// 				poseForce <- poseForceData
+// 				time.Sleep(time.Millisecond * 400)
+// 			}
+// 		}()
 
-	}
+// 	}
 
-}
-func testConnectHandler(c net.Conn) {
-	defer c.Close()
-	var pose []float32
-	for {
+// }
+// func testConnectHandler(c net.Conn) {
+// 	defer c.Close()
+// 	var pose []float32
+// 	for {
 
-		data := make([]byte, 1024)
+// 		data := make([]byte, 1024)
 
-		dataLen, err := c.Read(data)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		poseStr := string(data[:dataLen])
-		pose, err = UR3Handler.PoseTypeToFloatList(poseStr)
-		poseForce <- pose
-		if err != nil {
-			log.Println("UR3Handler.PoseTypeToFloatList : ", err)
-			return
-		}
-		// 釋放重複讀取pose
-		_, err = c.Read(data)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}
-	// Shut down the connection.
-}
+// 		dataLen, err := c.Read(data)
+// 		if err != nil {
+// 			log.Println(err)
+// 			return
+// 		}
+// 		poseStr := string(data[:dataLen])
+// 		pose, err = UR3Handler.PoseTypeToFloatList(poseStr)
+// 		poseForce <- pose
+// 		if err != nil {
+// 			log.Println("UR3Handler.PoseTypeToFloatList : ", err)
+// 			return
+// 		}
+// 		// 釋放重複讀取pose
+// 		_, err = c.Read(data)
+// 		if err != nil {
+// 			log.Println(err)
+// 			return
+// 		}
+// 	}
+// 	// Shut down the connection.
+// }

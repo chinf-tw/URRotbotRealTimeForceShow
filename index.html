@@ -16,19 +16,23 @@
     </style>
 </head>
 <body>
-<h2 style="text-align: center;">UR3 real time Force Value</h2>
+
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script src="https://code.highcharts.com/modules/export-data.js"></script>
 
+<h3 style="text-align: center;">UR3 Left Force with real time value</h3>
 <div class="container" id="force1"></div>
 <div class="container" id="force2"></div>
 <div class="container" id="force3"></div>
+
+<h3 style="text-align: center;">UR3 Right Force with real time value</h3>
 <div class="container" id="force4"></div>
 <div class="container" id="force5"></div>
 <div class="container" id="force6"></div>
 <script>
-    let socket = new WebSocket("ws://127.0.0.1:8080/ws");
+    var socketLeft = new WebSocket("ws://127.0.0.1:8080/ws");
+    let socketRight = new WebSocket("ws://127.0.0.1:9090/ws");
     console.log("Attempting Connection...");
 	const label = ["X Joint","Y Joint","Z Joint","RX Joint","RY Joint","RZ Joint"]
     var charts = [];
@@ -81,37 +85,42 @@
         charts.push(chart)
     }
 
+    function socketHandler(socket,handlerChartBegin) {
+        socket.onopen = () => {
+            console.log("Successfully Connected");
+            // socket.send("Hi From the Client!")
+        };
 
-    socket.onopen = () => {
-        console.log("Successfully Connected");
-        socket.send("Hi From the Client!")
-    };
+        socket.onclose = event => {
+            console.log("Socket Closed Connection: ", event);
+            // socket.send("Client Closed!")
+        };
 
-    socket.onclose = event => {
-        console.log("Socket Closed Connection: ", event);
-        socket.send("Client Closed!")
-    };
+        socket.onerror = error => {
+            console.log("Socket Error: ", error);
+        };
 
-    socket.onerror = error => {
-        console.log("Socket Error: ", error);
-    };
+        socket.onmessage = (event) => {
+            const obj = JSON.parse(event.data);
+            // console.log(obj.Force)
 
-    socket.onmessage = (event) => {
-        const obj = JSON.parse(event.data);
-        // console.log(obj.Force)
-
-        for (let i = 0; i < 6; i++) {
-            var series = charts[i].series[0];
-            var x = obj.ID, // current time
-                y = obj.Force[i];
-            series.addPoint([x, y], true, false, false)
-            if (series.points.length > 50) {
-                series.removePoint(0);
+            for (let i = 0; i < 3; i++) {
+                var series = charts[i+handlerChartBegin].series[0];
+                var x = obj.ID, // current time
+                    y = obj.Force[i];
+                series.addPoint([x, y], true, false, false)
+                if (series.points.length > 50) {
+                    series.removePoint(0);
+                }
+                console.log(series.points.length)
             }
-            console.log(series.points.length)
-        }
 
-    };
+        };
+    }
+
+
+    socketHandler(socketLeft,0);
+    socketHandler(socketRight,3);
 
 
 </script>
