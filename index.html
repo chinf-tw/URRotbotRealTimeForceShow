@@ -8,8 +8,8 @@
 
     <style>
         .container {
-            width: 40%;
-            height: 300px;
+            width: 30%;
+            /* height: 300px; */
             margin: 0 20px;
             display: inline-block;
         }
@@ -30,7 +30,7 @@
 <script>
     let socket = new WebSocket("ws://127.0.0.1:8080/ws");
     console.log("Attempting Connection...");
-	const label = ["X軸","Y軸","Z軸","RX軸","RY軸","RZ軸"]
+	const label = ["X Joint","Y Joint","Z Joint","RX Joint","RY Joint","RZ Joint"]
     var charts = [];
     for (let i = 0; i < 6; i++) {
         let nameID = 'force' + (i+1).toString();
