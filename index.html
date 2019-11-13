@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>Go WebSocket Tutorial</title>
+
+    <style>
+        .container {
+            width: 40%;
+            height: 300px;
+            margin: 0 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<h2 style="text-align: center;">UR3 real time Force Value</h2>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+
+<div class="container" id="force1"></div>
+<div class="container" id="force2"></div>
+<div class="container" id="force3"></div>
+<div class="container" id="force4"></div>
+<div class="container" id="force5"></div>
+<div class="container" id="force6"></div>
+<script>
+    let socket = new WebSocket("ws://127.0.0.1:8080/ws");
+    console.log("Attempting Connection...");
+	const label = ["X軸","Y軸","Z軸","RX軸","RY軸","RZ軸"]
+    var charts = [];
+    for (let i = 0; i < 6; i++) {
+        let nameID = 'force' + (i+1).toString();
+        let chart = Highcharts.chart(nameID, {
+            plotOptions: {
+                line: {
+                    dataLabels: {
+                        enabled: false
+                    },
+                    enableMouseTracking: false
+                }
+            },
+            chart: {
+                type: 'spline',
+                marginRight: 10,
+                animation: false
+            },
+            time: {
+                useUTC: false
+            },
+            title: {
+                text: label[i]
+            },
+            xAxis: {
+                type: 'Time',
+                tickPixelInterval: 300
+            },
+            yAxis: {
+                title: {
+                    text: i<3 ? 'Force (N)':'Force (mN)'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            legend: {
+                enabled: false
+            },
+            exporting: {
+                enabled: false
+            },
+            series: [{
+                name: 'Random data',
+            }]
+        });
+        charts.push(chart)
+    }
+
+
+    socket.onopen = () => {
+        console.log("Successfully Connected");
+        socket.send("Hi From the Client!")
+    };
+
+    socket.onclose = event => {
+        console.log("Socket Closed Connection: ", event);
+        socket.send("Client Closed!")
+    };
+
+    socket.onerror = error => {
+        console.log("Socket Error: ", error);
+    };
+
+    socket.onmessage = (event) => {
+        const obj = JSON.parse(event.data);
+        // console.log(obj.Force)
+
+        for (let i = 0; i < 6; i++) {
+            var series = charts[i].series[0];
+            var x = obj.ID, // current time
+                y = obj.Force[i];
+            series.addPoint([x, y], true, false, false)
+            if (series.points.length > 50) {
+                series.removePoint(0);
+            }
+            console.log(series.points.length)
+        }
+
+    };
+
+
+</script>
+</body>
+</html>
